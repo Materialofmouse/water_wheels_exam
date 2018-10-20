@@ -34,9 +34,11 @@ if __name__ == '__main__':
   #make dir from date
   if not (os.path.isdir(path)):
     os.makedirs(path)
-
+  
+  #make file from date 
   f = open(path + '/' + str(datetime.now().strftime('%H:%M:%S')) + '.csv','w')
   
+
   data = []
   data.append(str(datetime.now().strftime('%Y/%m/%d %H:%M:%S')))
   data.append(str(get_temp()))
