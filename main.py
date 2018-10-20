@@ -35,19 +35,20 @@ if __name__ == '__main__':
   if not (os.path.isdir(path)):
     os.makedirs(path)
   
+  
   #make file from date 
   f = open(path + '/' + str(datetime.now().strftime('%H:%M:%S')) + '.csv','w')
+  writer = csv.writer(f,lineterminator='\n')
   
-
+  
   data = []
-  data.append(str(datetime.now().strftime('%Y/%m/%d %H:%M:%S')))
+  data.append(str(datetime.now().strftime('%H:%M:%S')))
   data.append(str(get_temp()))
   data.append(str(get_wt_temp()))
   data.append(str(get_cpu_temp()))
   data.append(str(get_wt_level()))
   
   #write data to csv file
-  writer = csv.writer(f,lineterminator='\n')
   writer.writerow(data)
 
   f.close()
