@@ -32,9 +32,9 @@ def get_cpu_temp():
 
 #get water level,return int(0.5cm)
 def get_wt_level():
-  volt = Adafruit_ADS1x15.ADS1115().read_adc(2,gain=1)
+  volt = Adafruit_ADS1x15.ADS1115().read_adc(0,gain=2)
   level = volt * 2.048 / 32768
-  return level / 0.066
+  return level #
 
 #update later
 def control_water_level(level):
@@ -65,7 +65,7 @@ def control_water_level(level):
 #input the value that will change the water level
 def input_water_level():
   print("input the watar level")
-  water_level = input()
+  while type(input()) is not int
   return control_water_level(watar_level)
 
 #outside tempracture
