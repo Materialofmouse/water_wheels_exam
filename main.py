@@ -9,7 +9,7 @@ import Adafruit_ADS1x15
 import RPi.GPIO as gpio
 import subprocess
 
-gpio.setmode(GPIO.BCM)
+gpio.setmode(gpio.BCM)
 gpio.setup(16,gpio.OUT)#down pomp
 gpio.setup(20,gpio.OUT)#up pomp
 
@@ -38,31 +38,33 @@ def get_wt_level():
 
 #update later
 def control_water_level(level):
-  
-  #control
+  sec = 0.2
   level_now = get_wt_level()
   while level_now == level:
     
     #up control
     if level_now > level:
       gpio.output(16,False)
-    
+
     #donw control
     else:
       gpio.output(20,False)
-      time.sleep(sec)
-      gpio.output(20,False)
+
+    time.sleep(sec)
     
     #update now water level
+    gpio.output(16,True)
+    gpio.output(20,True)
     level_now = get_wt_level()
-
+  
+  gpio.cleanup()
   return level_now
 
+#input the value that will change the water level
 def input_water_level():
   print("input the watar level")
   water_level = input()
-  sec = input()
-  return control_water_level(watar_level,sec)
+  return control_water_level(watar_level)
 
 #outside tempracture
   
@@ -75,8 +77,7 @@ if __name__ == '__main__':
   #make dir from date
   if not (os.path.isdir(path)):
     os.makedirs(path)
-  
-  
+
   while True:
     
     #make file from date 
@@ -84,7 +85,7 @@ if __name__ == '__main__':
     writer = csv.writer(f,lineterminator='\n')
     
     
-    thread = threading.Thread(target=control_water_level)
+    thread = threading.Thread(target=input_water_level)
 
     data = []
     data.append(str(datetime.now().strftime('%H:%M:%S')))
