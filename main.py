@@ -38,6 +38,8 @@ def get_wt_level():
 
 #update later
 def control_water_level(level):
+  #gpio.setup(16,gpio.OUT)
+    
   sec = 0.2
   level_now = get_wt_level()
   while level_now == level:
@@ -77,26 +79,29 @@ if __name__ == '__main__':
   #make dir from date
   if not (os.path.isdir(path)):
     os.makedirs(path)
-
-  while True:
-    
-    #make file from date 
-    f = open(path + '/' + str(datetime.now().strftime('%H:%M:%S')) + '.csv','w')
-    writer = csv.writer(f,lineterminator='\n')
-    
-    
+  
+  try:
+    print('running program') 
     thread = threading.Thread(target=input_water_level)
+    thread.start()
 
-    data = []
-    data.append(str(datetime.now().strftime('%H:%M:%S')))
-    data.append(str(get_temp()))
-    data.append(str(get_wt_temp()))
-    data.append(str(get_cpu_temp()))
-    data.append(str(get_wt_level()))
-    
-    #write data to csv file
-    writer.writerow(data)
+    while True:
+      #make file from date 
+      f = open(path + '/' + str(datetime.now().strftime('%H:%M:%S')) + '.csv','w')
+      writer = csv.writer(f,lineterminator='\n')
+      
+      data = []
+      data.append(str(datetime.now().strftime('%H:%M:%S')))
+      data.append(str(get_temp()))
+      data.append(str(get_wt_temp()))
+      data.append(str(get_cpu_temp()))
+      data.append(str(get_wt_level()))
+      
+      #write data to csv file
+      writer.writerow(data)
 
-    f.close()
+      f.close()
 
-
+  except KeyboardInterrupt:
+    gpio.cleanup()
+    exit()
