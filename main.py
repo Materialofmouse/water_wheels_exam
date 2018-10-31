@@ -1,7 +1,9 @@
+#software
 import os
 import csv
 from datetime import datetime
 
+#hardware
 import Adafruit_ADS1x15
 import RPi.GPIO as gpio
 import subprocess
@@ -13,7 +15,7 @@ def get_temp():
 
   #water tempracture
 def get_wt_temp():
-  return int(subprocess.check_output(['cat','/sys/class/hwmon/hwmon0/temp1_input']))
+  return float(subprocess.check_output(['cat','/sys/class/hwmon/hwmon0/temp1_input'])) / 100
 
   #cpu tempracture
 def get_cpu_temp():
