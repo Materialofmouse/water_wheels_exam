@@ -31,36 +31,47 @@ def get_cpu_temp():
   return temp
 
 #get water level,return int(0.5cm)
-def get_wt_level():
+def get_watert_level():
   volt = Adafruit_ADS1x15.ADS1115().read_adc(0,gain=2)
   level = volt * 2.048 / 32768
   return level #
+
+def test_water_level():
+  return 10
 
 #update later
 def control_water_level(level):
   #gpio.setup(16,gpio.OUT)
     
   sec = 0.2
-  level_now = get_wt_level()
+  level_now = test_water_level()
   while level_now == level:
     
     #up control
     if level_now > level:
       gpio.output(16,False)
+      print('up now')
 
     #donw control
     else:
       gpio.output(20,False)
+      print('down now')
 
     time.sleep(sec)
     
     #update now water level
     gpio.output(16,True)
     gpio.output(20,True)
-    level_now = get_wt_level()
+    level_now = test_water_level()
   
   gpio.cleanup()
   return level_now
+
+def test_control(level):
+  
+  for i in range(level):
+    time.sleep(0.5)
+    gpio.output(16,False)
 
 #input the value that will change the water level
 def input_water_level():
