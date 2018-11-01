@@ -65,12 +65,18 @@ def control_water_level(level):
 #input the value that will change the water level
 def input_water_level():
   
-  print("input the watar level")
-  level = input()
-  while type(level) is not int:
-    level = input()
-  
-  return control_water_level(watar_level)
+  while True:
+    
+    level = input('plase input water level')
+    try:
+      int(level)
+      return control_water_level(level)
+
+    except:
+      print('plase input intager value!!!!!!')
+      continue
+
+  return False
 
 #output data path
 path = str(os.getcwd()) + '/data/' + str(datetime.now().strftime('%Y/%m/%d'))
