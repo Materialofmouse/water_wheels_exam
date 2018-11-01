@@ -8,6 +8,7 @@ import threading
 import Adafruit_ADS1x15
 import RPi.GPIO as gpio
 import subprocess
+import time
 
 gpio.setmode(gpio.BCM)
 gpio.setup(16,gpio.OUT)#down pomp
@@ -17,12 +18,18 @@ gpio.setup(20,gpio.OUT)#up pomp
 gpio.output(16,True)
 gpio.output(20,True)
 
+class control_water_level(threading.Thread):
+  def __init__(self):
+    super(control_water_level,self).__init__()
+
+  
+
 def get_temp():
   temp = 10
   return temp
 
 #water tempracture return int
-def get_wt_temp():
+def get_water_temp():
   return float(subprocess.check_output(['cat','/sys/class/hwmon/hwmon0/temp1_input'])) / 100
 
 #cpu tempracture return int
@@ -31,7 +38,7 @@ def get_cpu_temp():
   return temp
 
 #get water level,return int(0.5cm)
-def get_watert_level():
+def get_water_level():
   volt = Adafruit_ADS1x15.ADS1115().read_adc(0,gain=2)
   level = volt * 2.048 / 32768
   return level #
@@ -43,27 +50,29 @@ def test_water_level():
 def control_water_level(level):
   #gpio.setup(16,gpio.OUT)
     
-  sec = 0.2
-  level_now = test_water_level()
-  while level_now == level:
+  sec = 0.5
+  level_now = get_water_level()
+  
+  while not level_now == level:
     
     #up control
     if level_now > level:
       gpio.output(16,False)
-      print('up now')
+      print('now level is ' + str(level_now) + ',up now...,' )
 
     #donw control
     else:
       gpio.output(20,False)
-      print('down now')
+      print('now level is ' + str(level_now) +',down now')
 
     time.sleep(sec)
     
     #update now water level
-    gpio.output(16,True)
-    gpio.output(20,True)
-    level_now = test_water_level()
-  
+    level_now = get_water_level()
+
+  gpio.output(16,True)
+  gpio.output(20,True)
+ 
   gpio.cleanup()
   return level_now
 
@@ -80,10 +89,10 @@ def input_water_level():
     
     level = input('plase input water level:')
     try:
-      int(level)
+      level = int(level)
       return control_water_level(level)
 
-    except:
+    except ValueError:
       print('plase input intager value!!!!!!')
       continue
 
@@ -104,19 +113,20 @@ if __name__ == '__main__':
   print('running program') 
   
   try:  
+    path = path + '/' + str(datetime.now().strftime('%H:%M:%S')) + '.csv'
     while True:
       
       #make file from date 
-      f = open(path + '/' + str(datetime.now().strftime('%H:%M:%S')) + '.csv','w')
+      f = open(path,'w')
       writer = csv.writer(f,lineterminator='\n')
       
       #make write data
       data = []
       data.append(str(datetime.now().strftime('%H:%M:%S')))
       data.append(str(get_temp()))
-      data.append(str(get_wt_temp()))
+      data.append(str(get_water_temp()))
       data.append(str(get_cpu_temp()))
-      data.append(str(get_wt_level()))
+      data.append(str(get_water_level()))
       
       #write data to csv file
       writer.writerow(data)
