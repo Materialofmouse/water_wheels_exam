@@ -67,7 +67,7 @@ def input_water_level():
   
   while True:
     
-    level = input('plase input water level')
+    level = input('plase input water level:')
     try:
       int(level)
       return control_water_level(level)
@@ -88,16 +88,18 @@ if __name__ == '__main__':
   if not (os.path.isdir(path)):
     os.makedirs(path)
   
-  try:
-    print('running program') 
-    thread = threading.Thread(target=input_water_level)
-    thread.start()
-
+  thread = threading.Thread(target=input_water_level)
+  thread.start()
+  print('running program') 
+  
+  try:  
     while True:
+      
       #make file from date 
       f = open(path + '/' + str(datetime.now().strftime('%H:%M:%S')) + '.csv','w')
       writer = csv.writer(f,lineterminator='\n')
       
+      #make write data
       data = []
       data.append(str(datetime.now().strftime('%H:%M:%S')))
       data.append(str(get_temp()))
