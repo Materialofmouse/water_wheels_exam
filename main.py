@@ -67,11 +67,15 @@ class control(threading.Thread,sensors):
     sec = 0.5
     level_now = sensors().get_water_level()
     
+    gpio.setmode(gpio.BCM)
+    gpio.setup(16,gpio.OUT)
+    gpio.setup(20,gpio.OUT)
+    
     while not level_now == level:
       #up control
       if level_now > level:
         gpio.output(16,False)
-        print('now level is ' + str(level_now) + ',up now...,' )
+        print('now level is ' + str(level_now) + ',up now...' )
       #down control
       else:
         gpio.output(20,False)
