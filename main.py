@@ -9,8 +9,8 @@ import RPi.GPIO as gpio
 import subprocess
 import time
 
-class sensors():
 
+class sensors():
   def __init__(self):
     pass
 
@@ -38,7 +38,6 @@ class sensors():
 
 
 class control(threading.Thread,sensors):
-  
   def __init__(self):
     super(control,self).__init__()
     #gpio settings,16:up,20:down
@@ -118,6 +117,7 @@ if __name__ == '__main__':
       #write data to csv file
       writer.writerow(data)
       f.close()
+      time.sleep(5)
 
   except KeyboardInterrupt:
     gpio.cleanup()
