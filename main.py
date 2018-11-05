@@ -9,7 +9,6 @@ import RPi.GPIO as gpio
 import subprocess
 import time
 
-
 class sensors():
   def __init__(self):
     pass
@@ -29,96 +28,85 @@ class sensors():
 
   #get water level,return int(0.5cm)
   def get_water_level(self):
-    volt = Adafruit_ADS1x15.ADS1115().read_adc(0,gain=2)
-    level = volt * 2.048 / 32768
-    return level
-
-  def test_water_level():
-    return 10
+    volt = Adafruit_ADS1x15.ADS1115().read_adc(1,gain=2)
+    level = volt * 2.048 / 2048
+    return (level - 3) * 10
 
 
-class control(threading.Thread,sensors):
+class data_write(threading.Thread,sensors):
   def __init__(self):
-    super(control,self).__init__()
-    #gpio settings,16:up,20:down
-    gpio.setmode(gpio.BCM)
-    gpio.setup(16,gpio.OUT)
-    gpio.setup(20,gpio.OUT)
-    #always high 
-    gpio.output(16,True)
-    gpio.output(20,True)
-
+    self.path = str(os.getcwd()) + '/data/' + str(datetime.now().strftime('%Y/%m/%d'))
+    if not (os.path.isdir(self.path)):
+      os.makedirs(self.path)
+    self.path = self.path + '/' + str(datetime.now().strftime('%H:%M:%S')) + '.csv'
+    super().__init__()
+  
   def run(self):
+    while True:
+      #make file from date 
+      f = open(self.path,'a')
+      writer = csv.writer(f,lineterminator='\n')
+      #make write data
+      data = []
+      data.append(str(datetime.now().strftime('%H:%M:%S')))
+      data.append(str(sensors().get_temp()))
+      data.append(str(sensors().get_water_temp()))
+      data.append(str(sensors().get_cpu_temp()))
+      data.append(str(sensors().get_water_level()))
+      
+      #write data to csv file
+      writer.writerow(data)
+      f.close()
+      time.sleep(1)
+    
+    return True
+
+
+if __name__ == '__main__':
+
+  gpio.setmode(gpio.BCM)
+  gpio.setup(16,gpio.OUT)
+  gpio.setup(20,gpio.OUT)
+  gpio.output(16,True)
+  gpio.output(20,True)
+
+  thread = data_write()
+  thread.start()
+  print('program started') 
+
+  #input water level
+  try:  
     while True:     
       level = input('plase input water level:')
       try:
         level = int(level)
-        control.control_water_level(self,level)
 
       except ValueError:
         print('plase input intager value!!!!!!')
         continue
 
-    return False
+      time.sleep(1)
 
-  def control_water_level(self,level):
-    #gpio.setup(16,gpio.OUT)
-    sec = 0.5
-    level_now = sensors().get_water_level()
-    
-    gpio.setmode(gpio.BCM)
-    gpio.setup(16,gpio.OUT)
-    gpio.setup(20,gpio.OUT)
-    
-    while not level_now == level:
-      #up control
-      if level_now > level:
-        gpio.output(16,False)
-        print('now level is ' + str(level_now) + ',up now...' )
-      #down control
-      else:
-        gpio.output(20,False)
-        print('now level is ' + str(level_now) +',down now')
+      sec = 1
+      level_now = sensors().get_water_level() 
+      while not level_now == level:
+        #up control
+        if level_now > level:
+          gpio.output(16,False)
+          print('now level is ' + str(level_now) + ',up now...' )
+        #down control
+        else:
+          gpio.output(20,False)
+          print('now level is ' + str(level_now) +',down now')
 
-      time.sleep(sec)
-      level_now = sensors().get_water_level()
+        time.sleep(sec)
+        level_now = sensors().get_water_level()
 
-    gpio.output(16,True)
-    gpio.output(20,True)
-    gpio.cleanup()
-    return level_now
-
-
-if __name__ == '__main__':
-  #make dir from date
-  path = str(os.getcwd()) + '/data/' + str(datetime.now().strftime('%Y/%m/%d'))
-  if not (os.path.isdir(path)):
-    os.makedirs(path)
-  
-  thread = control()
-  sensor = sensors()
-  thread.start()
-  print('running program') 
-  
-  try:  
-    path = path + '/' + str(datetime.now().strftime('%H:%M:%S')) + '.csv'
-    while True:
-      #make file from date 
-      f = open(path,'w')
-      writer = csv.writer(f,lineterminator='\n')
-      #make write data
-      data = []
-      data.append(str(datetime.now().strftime('%H:%M:%S')))
-      data.append(str(sensor.get_temp()))
-      data.append(str(sensor.get_water_temp()))
-      data.append(str(sensor.get_cpu_temp()))
-      data.append(str(sensor.get_water_level()))
+        gpio.output(16,True)
+        gpio.output(20,True)
       
-      #write data to csv file
-      writer.writerow(data)
-      f.close()
-      time.sleep(5)
-
+      gpio.cleanup()
+      
   except KeyboardInterrupt:
     gpio.cleanup()
     exit()
