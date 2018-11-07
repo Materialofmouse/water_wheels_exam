@@ -24,9 +24,10 @@ class sensors():
 
   #get water level,return int(0.5cm)
   def get_water_level(self):
-    volt = Adafruit_ADS1x15.ADS1115().read_adc(1,gain=2)
-    level = volt * 2.048 / 2048
-    return (level - 3) * 10
+    volt = Adafruit_ADS1x15.ADS1115().read_adc(0,gain=2)
+    level = volt * 2.048 / 32768
+    level = 20.85 - (((level - 0.56) * 1000 / 21.4) * 0.42 )
+    return round(level,0)
 
 
 class data_write(threading.Thread,sensors):
@@ -90,11 +91,11 @@ if __name__ == '__main__':
         #up control
         if level_now > level:
           gpio.output(16,True)
-          print('now level is ' + str(level_now) + ',up now...' )
+          print('now level is ' + str(level_now) + ',down now...' )
         #down control
         else:
           gpio.output(20,True)
-          print('now level is ' + str(level_now) +',down now')
+          print('now level is ' + str(level_now) +',up now')
 
         time.sleep(sec)
         level_now = sensors().get_water_level()
