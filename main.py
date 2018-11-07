@@ -32,6 +32,7 @@ class sensors():
 class data_write(threading.Thread,sensors):
   def __init__(self):
     self.JST = pytz.timezone('Asia/Tokyo')
+    #make dir from now time
     self.path = str(os.getcwd()) + '/data/' + str(datetime.now(self.JST).strftime('%Y/%m/%d'))
     if not (os.path.isdir(self.path)):
       os.makedirs(self.path)

@@ -7,8 +7,8 @@ GAIN = 2
 adc = ads.ADS1115()
 
 while True:
-  v = float(adc.read_adc(CHANNEL, gain=GAIN)) * 2.048 / 32768 - 2.464
-  level = v / 0.33
-  print(str(round(level,1)) + ' cm')
+  v = float(adc.read_adc(CHANNEL, gain=GAIN)) * 2.048 / 32768
+  level = ((v)-0.75)
+  print(str(round(level,2)) + ' cm')
   
   time.sleep(0.5)
