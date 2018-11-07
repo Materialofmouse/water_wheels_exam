@@ -20,7 +20,7 @@ class sensors():
 
   #water tempracture return int
   def get_water_temp(self):
-    return float(subprocess.check_output(['cat','/sys/class/hwmon/hwmon0/temp1_input'])) / 100
+    return float(subprocess.check_output(['cat','/sys/class/hwmon/hwmon0/temp1_input'])) / 1000
 
   #get water level,return int(0.5cm)
   def get_water_level(self):
