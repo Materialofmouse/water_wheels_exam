@@ -3,6 +3,7 @@ import os
 import csv
 from datetime import datetime
 import threading
+import pytz
 #hardware
 import Adafruit_ADS1x15
 import RPi.GPIO as gpio
@@ -21,11 +22,6 @@ class sensors():
   def get_water_temp(self):
     return float(subprocess.check_output(['cat','/sys/class/hwmon/hwmon0/temp1_input'])) / 100
 
-  #cpu tempracture return int
-  def get_cpu_temp(self):
-    temp = 50
-    return temp
-
   #get water level,return int(0.5cm)
   def get_water_level(self):
     volt = Adafruit_ADS1x15.ADS1115().read_adc(1,gain=2)
@@ -35,10 +31,11 @@ class sensors():
 
 class data_write(threading.Thread,sensors):
   def __init__(self):
-    self.path = str(os.getcwd()) + '/data/' + str(datetime.now().strftime('%Y/%m/%d'))
+    self.JST = pytz.timezone('Asia/Tokyo')
+    self.path = str(os.getcwd()) + '/data/' + str(datetime.now(self.JST).strftime('%Y/%m/%d'))
     if not (os.path.isdir(self.path)):
       os.makedirs(self.path)
-    self.path = self.path + '/' + str(datetime.now().strftime('%H:%M:%S')) + '.csv'
+    self.path = self.path + '/' + str(datetime.now(self.JST).strftime('%H:%M:%S')) + '.csv'
     super().__init__()
   
   def run(self):
@@ -48,10 +45,9 @@ class data_write(threading.Thread,sensors):
       writer = csv.writer(f,lineterminator='\n')
       #make write data
       data = []
-      data.append(str(datetime.now().strftime('%H:%M:%S')))
+      data.append(str(datetime.now(self.JST).strftime('%H:%M:%S')))
       data.append(str(sensors().get_temp()))
       data.append(str(sensors().get_water_temp()))
-      data.append(str(sensors().get_cpu_temp()))
       data.append(str(sensors().get_water_level()))
       
       #write data to csv file
@@ -67,8 +63,8 @@ if __name__ == '__main__':
   gpio.setmode(gpio.BCM)
   gpio.setup(16,gpio.OUT)
   gpio.setup(20,gpio.OUT)
-  gpio.output(16,True)
-  gpio.output(20,True)
+  gpio.output(16,False)
+  gpio.output(20,False)
 
   thread = data_write()
   thread.start()
@@ -92,18 +88,18 @@ if __name__ == '__main__':
       while not level_now == level:
         #up control
         if level_now > level:
-          gpio.output(16,False)
+          gpio.output(16,True)
           print('now level is ' + str(level_now) + ',up now...' )
         #down control
         else:
-          gpio.output(20,False)
+          gpio.output(20,True)
           print('now level is ' + str(level_now) +',down now')
 
         time.sleep(sec)
         level_now = sensors().get_water_level()
 
-        gpio.output(16,True)
-        gpio.output(20,True)
+        gpio.output(16,False)
+        gpio.output(20,False)
       
       gpio.cleanup()
       
