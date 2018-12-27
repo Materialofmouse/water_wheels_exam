@@ -24,7 +24,7 @@ class sensors():
 
   #get water level,return int(0.5cm)
   def get_water_level(self):
-    volt = Adafruit_ADS1x15.ADS1115().read_adc(1,gain=2)
+    volt = Adafruit_ADS1x15.ADS1115().read_adc(0,gain=2)
     level = volt * 2.048 / 32768
     level = 20.85 - (((level - 0.56) * 1000 / 21.4) * 0.42 )
     return round(level,0)
@@ -44,12 +44,13 @@ class data_write(threading.Thread,sensors):
     while True:
       #make file from date 
       f = open(self.path,'a')
+      print(f)
       writer = csv.writer(f,lineterminator='\n')
       #make write data
       data = []
       data.append(str(datetime.now(self.JST).strftime('%H:%M:%S')))
       data.append(str(sensors().get_temp()))
-      data.append(str(sensors().get_water_temp()))
+      print(data.append(str(sensors().get_water_temp())))
       data.append(str(sensors().get_water_level()))
       
       #write data to csv file
