@@ -2,6 +2,19 @@
 # -*- coding: utf-8 -*-
 import RPi.GPIO as GPIO
 import time
+import threading
+
+class timer():
+  def __init__(self):
+    pass
+
+  def check_write(self):
+    while True:
+      time.sleep(10)
+  
+  def check_rpm(self):
+    while True:
+      time.sleep(60)
 
 class sensors():
   def __init__(self):
