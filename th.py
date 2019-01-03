@@ -1,27 +1,20 @@
 import time
 import threading
 
-check_flag = False
-flag = False
-
-def t():
+def t(string):
   while True:
-    global flag
-    if flag == False:
-      check_flag = False
-      continue
-    
-    flag = False
+    print("hello from " + string)
     time.sleep(1)
-    check_flag = True
-    return check_flag
-
+  
 if __name__ == "__main__":
-  thread = threading.Thread(target=t)
-  thread.start()
-
-  if check_flag == True:
-    print(flag)
-    flag = True
-    print(1)
+  thread1 = threading.Thread(target=t,args='a') 
+  thread2 = threading.Thread(target=t,args='m')
+  thread1.start()
+  thread2.start()
+  thread1.join()
+  thread2.join()
+  
+  while True:
+    time.sleep(0.1)
     
+      
