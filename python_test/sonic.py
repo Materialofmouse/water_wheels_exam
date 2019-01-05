@@ -23,7 +23,7 @@ def calc_distance(TRIG_PIN, ECHO_PIN, num, v=34000):
     time.sleep(0.00001)
     GPIO.output(TRIG_PIN, False)
     t = pulseIn(ECHO_PIN)
-    distance = v * t/2
+    distance = v * t / 2
     print(distance, 'cm')
   GPIO.cleanup()
 
