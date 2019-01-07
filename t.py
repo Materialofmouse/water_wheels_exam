@@ -1,13 +1,8 @@
 import threading
 import queue
 import RPi.GPIO as GPIO
-from datetime import datetime
 import time
 import sys
-import csv
-import pytz
-import os
-import subprocess
 
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BCM)
@@ -31,19 +26,24 @@ def set_water_level():
   q.put(dict(level1=level[0] + 1, level2=level[1] + 1))
   print('[level] --- ok')
 
-
 def set_water_temp():
+  import subprocess
   #--- get water level ---
   global q
   t = subprocess.check_output(['cat','/sys/class/hwmon/hwmon0/temp1_input'])
   q.put(dict(temp = t))
   print('[temp]  --- ok')
 
-def on_timer():
-  time.sleep(2)
+def rpm_get():
+  
 
 def main():
-  
+  import os
+  from datetime import datetime
+  import pytz
+  import csv
+
+
   JST = pytz.timezone('Asia/Tokyo')
   filepath = str('/home/pi/data/' + str(datetime.now(JST).strftime('%Y/%m/%d')))
 
@@ -56,7 +56,8 @@ def main():
     threadlist.append(threading.Thread(target=set_water_level()))
     threadlist.append(threading.Thread(target=set_water_temp()))
     threadlist.append(threading.Thread(target=on_timer()))
-    
+    threadlist.append(threading.Thread(target=test_timer()))
+
     for thread in threadlist:
       thread.start()
 
