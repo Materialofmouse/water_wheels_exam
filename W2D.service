@@ -1,0 +1,14 @@
+[Unit]
+Description = Write to Data
+After=network.target
+
+[Service]
+WorkingDirectory=/home/pi/workspace/wt_pomp/
+ExecStart=/usr/bin/python3 -u /opt/t.py
+Restart=always
+Type=simple
+StandardOutput=journal
+StandardError=jounal
+
+[Install]
+WantedBy=multi-user.target

@@ -1,28 +1,35 @@
 import threading
 import queue
 import RPi.GPIO as GPIO
+import Adafruit_DHT as DHT
 import time
 import sys
 from datetime import datetime
+import subprocess
+import os
+import pytz
+import csv
 
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BCM)
 GPIO.cleanup()
 
-level_pin = [[15,18,23,24],[12,16,20,21]]
-rpm_pin = [17,27]
+LEVEL_PIN = [[15,18,23,24],[12,16,20,21]]
+RPM_PIN = [17,27]
 
-GPIO.setup(level_pin[0], GPIO.IN)
-GPIO.setup(level_pin[1], GPIO.IN)
-GPIO.setup(rpm_pin,GPIO.IN)
+GPIO.setup(LEVEL_PIN[0], GPIO.IN)
+GPIO.setup(LEVEL_PIN[1], GPIO.IN)
+GPIO.setup(RPM_PIN,GPIO.IN)
+
+WATER_TEMP_PATH = '/sys/class/hwmon/hwmon0/'
 
 q = queue.Queue()
 
-def set_water_level():
+def put_water_level():
   print('[level]  --- start')
   level = [0] * 2
   
-  for i,pin_num in enumerate(level_pin):
+  for i,pin_num in enumerate(LEVEL_PIN):
     for pin in pin_num:
       level[i] += not GPIO.input(pin)
    
@@ -30,14 +37,23 @@ def set_water_level():
   print('[level]  --- ok')
 
 
-def set_water_temp():
-  import subprocess
+def put_temp():
   #--- get water level ---
+  key = ['temp','temp1','temp2','temp3']
+  t = []
+  
+  SENSOR = DHT.DHT11
+  DHT_PIN = 22
   print('[temp]   --- start')
-  t = int(subprocess.check_output(['cat','/sys/class/hwmon/hwmon0/temp1_input']))
-  t = t / 1000
-  q.put(dict(temp = t))
+  h,temp = DHT.read_retry(SENSOR,DHT_PIN)
+  t.append(temp)
   print('[temp]   --- ok')
+  for i in range(1):
+    print('[temp' + str(i + 1) + ']  --- start')
+    t.append(float(subprocess.check_output(['cat',WATER_TEMP_PATH + 'temp' + str(i + 1) + '_input'])) / 1000)
+    print('[temp' + str(i + 1) + ']  --- ok')
+  d = dict(zip(key, t))
+  q.put(d)
 
 
 def rpm_get(pin_num):
@@ -47,10 +63,10 @@ def rpm_get(pin_num):
   print('[rpm' + str(pin_num + 1) +']   --- start')
   
   while not (datetime.now() - start_time).seconds == 10:
-    if GPIO.input(rpm_pin[pin_num]) == True and flag == True:
+    if GPIO.input(RPM_PIN[pin_num]) == True and flag == True:
       flag = False
       cnt += 1
-    elif GPIO.input(rpm_pin[pin_num]) == False:
+    elif GPIO.input(RPM_PIN[pin_num]) == False:
       flag = True
 
   print('[rpm'  + str(pin_num + 1) + ']   --- ok')
@@ -59,24 +75,19 @@ def rpm_get(pin_num):
 
 
 def main():
-  import os
-  import pytz
-  import csv
-
-
   JST = pytz.timezone('Asia/Tokyo')
-  file_path = str('/home/pi/data/' + str(datetime.now(JST).strftime('%Y/%m/%d')))
+  FILE_PATH = str('/home/pi/data/' + str(datetime.now(JST).strftime('%Y/%m/%d')))
 
-  if not (os.path.isdir(file_path)):
-    os.makedirs(file_path)
-  write_path = file_path + '/' + str(datetime.now(JST).strftime('%H:%M:%S')) + '_started'+ '.csv'
+  if not (os.path.isdir(FILE_PATH)):
+    os.makedirs(FILE_PATH)
+  WRITE_PATH = FILE_PATH + '/' + str(datetime.now(JST).strftime('%H:%M:%S')) + '_started'+ '.csv'
   try:
     while True:
       
       start_time = datetime.now(JST)
       threadlist = list()
-      threadlist.append(threading.Thread(target=set_water_level()))
-      threadlist.append(threading.Thread(target=set_water_temp()))
+      threadlist.append(threading.Thread(target=put_water_level()))
+      threadlist.append(threading.Thread(target=put_temp()))
       threadlist.append(threading.Thread(target=rpm_get,args=(0,)))
       threadlist.append(threading.Thread(target=rpm_get,args=(1,)))
 
@@ -91,12 +102,12 @@ def main():
         data.update(q.get())
       
       print(data)
-      f = open(write_path,'a')
+      f = open(WRITE_PATH,'a')
       writer = csv.writer(f,lineterminator='\n')
 
       write_data = list()
       write_data.append(str(datetime.now(JST).strftime('%H:%M:%S')))
-      write_data.append(str(data['temp']))
+      write_data.append(str(data['temp1']))
       write_data.append(str(data['level1']))
       write_data.append(str(data['level2']))
       write_data.append(str(data['rpm1']))
